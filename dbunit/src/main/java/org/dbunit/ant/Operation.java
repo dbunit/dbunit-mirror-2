@@ -21,9 +21,13 @@
 
 package org.dbunit.ant;
 
+import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.types.FileSet;
+import org.apache.tools.ant.types.Resource;
 import org.dbunit.DatabaseUnitException;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.database.DatabaseSequenceFilter;
+import org.dbunit.dataset.CompositeDataSet;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.ReplacementDataSet;
 import org.dbunit.dataset.FilteredDataSet;
@@ -35,6 +39,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * The <code>Operation</code> class is the step that defines which
@@ -59,20 +67,36 @@ public class Operation extends AbstractStep
 
     protected String _type = "CLEAN_INSERT";
     private String _format;
-    private File _src;
+    private List<File> _sources = new ArrayList<>();
+    private boolean _combine = false;
     private boolean _transaction = false;
     private DatabaseOperation _operation;
     private boolean _forwardOperation = true;
     private String _nullToken;
 
-    public File getSrc()
+    public File[] getSrc()
     {
-        return _src;
+        return _sources.toArray(new File[_sources.size()]);
+    }
+
+    public void setSrc(File[] sources)
+    {
+        _sources.clear();
+        _sources.addAll(Arrays.asList(sources));
     }
 
     public void setSrc(File src)
     {
-        _src = src;
+        _sources.clear();
+        _sources.add(src);
+    }
+
+    public void addConfiguredFileset(FileSet fileSet)
+    {
+        DirectoryScanner scanner = fileSet.getDirectoryScanner(getProject());
+        for (String file : scanner.getIncludedFiles()) {
+            _sources.add(new File(scanner.getBasedir(), file));
+        }
     }
 
     public String getFormat()
@@ -88,6 +112,16 @@ public class Operation extends AbstractStep
         checkDataFormat(format);
         // If we get here the given format is a valid data format
         _format = format;
+    }
+
+    public boolean isCombine()
+    {
+        return _combine;
+    }
+
+    public void setCombine(boolean combine)
+    {
+        _combine = combine;
     }
 
     public boolean isTransaction()
@@ -175,11 +209,25 @@ public class Operation extends AbstractStep
             return;
         }
 
+        if (_sources.size() == 0)
+        {
+            throw new DatabaseUnitException("Operation.execute(): setSrc(File), addSrc(File) or setSources(File[]) must be called before execute()!");
+        }
+
         try {
             DatabaseOperation operation = (_transaction ? new TransactionOperation(_operation) : _operation);
             // TODO This is not very nice and the design should be reviewed but it works for now (gommma)
             boolean useForwardOnly = _forwardOperation && ! isOrdered();
-            IDataSet dataset = getSrcDataSet(getSrc(), getFormat(), useForwardOnly);
+            IDataSet dataset;
+            if (_sources.size() > 1) {
+                IDataSet[] datasets = new IDataSet[_sources.size()];
+                for (int i = 0; i < _sources.size(); i++) {
+                    datasets[i] = getSrcDataSet(_sources.get(i), getFormat(), useForwardOnly);
+                }
+                dataset = new CompositeDataSet(datasets, _combine);
+            } else {
+                dataset = getSrcDataSet(_sources.get(0), getFormat(), useForwardOnly);
+            }
             if (_nullToken != null) {
                 dataset = new ReplacementDataSet(dataset);
                 ((ReplacementDataSet)dataset).addReplacementObject(_nullToken, null);
@@ -199,9 +247,15 @@ public class Operation extends AbstractStep
 
     public String getLogMessage()
     {
-        return "Executing operation: " + _type
-                + "\n          on   file: " + ((_src == null) ? null : _src.getAbsolutePath())
-                + "\n          with format: " + _format;
+        StringBuffer result = new StringBuffer();
+        result.append("Executing operation: " + _type);
+        result.append("\n          on   files: [ ");
+        for (File f : _sources) {
+            result.append(f.getAbsolutePath() + " ");
+        }
+        result.append("]");
+        result.append("\n          with format: " + _format);
+        return result.toString();
     }
 
 
@@ -211,7 +265,11 @@ public class Operation extends AbstractStep
         result.append("Operation: ");
         result.append(" type=").append(_type);
         result.append(", format=").append(_format);
-        result.append(", src=").append(_src == null ? "null" : _src.getAbsolutePath());
+        result.append(", sources=[ ");
+        for (File f : _sources) {
+            result.append(f.getAbsolutePath() + " ");
+        }
+        result.append("]");
         result.append(", operation=").append(_operation);
         result.append(", nullToken=").append(_nullToken);
         result.append(", ordered=").append(super.isOrdered());

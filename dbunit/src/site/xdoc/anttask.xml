@@ -218,14 +218,20 @@
             </tr>
             <tr>
               <td>src</td>
-              <td>The xml source upon which the operation is to be
-              performed</td>
-              <td>Yes</td>
+              <td>The source file upon which the operation is to be
+                performed</td>
+              <td>Either src or fileset must be specified</td>
+            </tr>
+            <tr>
+              <td>fileset</td>
+              <td>The source files upon which the operation is to be
+                performed. The source files make up a composite dataset.</td>
+              <td>Either src or fileset must be specified</td>
             </tr>
             <tr>
               <td>format</td>
-              <td>Format type of supplied source file. Possible
-              values are "flat", "xml", "csv", "dtd", "xls".
+              <td>Format type of supplied source file(s). Possible
+              values are "flat", "xml", "csv", "dtd", "xls", "yml".
               Defaults to 
               <b>"flat"</b></td>
               <td>
@@ -233,13 +239,23 @@
               </td>
             </tr>
             <tr>
+              <td>combine</td>
+              <td>Boolean indicating if tables in a composite dataset
+                having the same name should be merged into one table.
+                Possible values are "true" or "false". Defaults to
+                <b>"false"</b>.</td>
+              <td>
+                <p>No</p>
+              </td>
+            </tr>
+            <tr>
               <td>transaction</td>
               <td>Boolean indicating if this operation should be
-              wrapped in a transaction, ensuring that the entire
-              operation completes or is rolled back. This may also
-              dramatically improve performance of large operations.
-              Possible values are "true" or "false". Defaults to 
-              <b>"false"</b>.</td>
+                wrapped in a transaction, ensuring that the entire
+                operation completes or is rolled back. This may also
+                dramatically improve performance of large operations.
+                Possible values are "true" or "false". Defaults to
+                <b>"false"</b>.</td>
               <td>
                 <p>No</p>
               </td>

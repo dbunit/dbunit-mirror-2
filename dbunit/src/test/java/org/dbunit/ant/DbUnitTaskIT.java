@@ -176,6 +176,10 @@ public class DbUnitTaskIT extends BuildFileTest
                 "test-type-refresh", DatabaseOperation.REFRESH);
         assertOperationType("Should have been an CLEAN_INSERT operation",
                 "test-type-clean-insert", DatabaseOperation.CLEAN_INSERT);
+        assertOperationType("Should have been an CLEAN_INSERT operation",
+                "test-type-clean-insert-composite", DatabaseOperation.CLEAN_INSERT);
+        assertOperationType("Should have been an CLEAN_INSERT operation",
+                "test-type-clean-insert-composite-combine", DatabaseOperation.CLEAN_INSERT);
         assertOperationType("Should have been an DELETE operation",
                 "test-type-delete", DatabaseOperation.DELETE);
         assertOperationType("Should have been an MSSQL_INSERT operation",

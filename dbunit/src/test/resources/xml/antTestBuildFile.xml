@@ -10,6 +10,11 @@
   <property name="dbunit.profile.password" value="unknown"/>
 
   <property name="testDataSet" value="src/test/resources/xml/flatXmlDataSetTest.xml"/>
+  <property name="compositeDataSetFolder" value="src/test/resources/xml"/>
+  <property name="compositeDataSet1" value="flatXmlCompositeDataSetTestPart1.xml"/>
+  <property name="compositeDataSet2" value="flatXmlCompositeDataSetTestPart2.xml"/>
+  <property name="compositeCombineDataSet1" value="flatXmlCompositeCombineDataSetTestPart1.xml"/>
+  <property name="compositeCombineDataSet2" value="flatXmlCompositeCombineDataSetTestPart2.xml"/>
   <property name="updateDataSet" value="src/test/resources/xml/antTestDataSet.xml"/>
   <property name="exportDataSet" value="target/xml/antExportDataSet.xml"/>
   <property name="exportDtd" value="src/test/resources/xml/antExport.dtd"/>
@@ -161,6 +166,34 @@
             userid="${dbunit.profile.user}"
             password="${dbunit.profile.password}">
       <operation type="CLEAN_INSERT" src="${testDataSet}"/>
+    </dbunit>
+  </target>
+
+  <target name="test-type-clean-insert-composite">
+    <dbunit driver="${dbunit.profile.driverClass}"
+            url="${dbunit.profile.url}"
+            userid="${dbunit.profile.user}"
+            password="${dbunit.profile.password}">
+      <operation type="CLEAN_INSERT">
+        <fileset dir="${compositeDataSetFolder}">
+          <include name="${compositeDataSet1}"/>
+          <include name="${compositeDataSet2}"/>
+        </fileset>
+      </operation>
+    </dbunit>
+  </target>
+
+  <target name="test-type-clean-insert-composite-combine">
+    <dbunit driver="${dbunit.profile.driverClass}"
+            url="${dbunit.profile.url}"
+            userid="${dbunit.profile.user}"
+            password="${dbunit.profile.password}">
+      <operation type="CLEAN_INSERT" combine="true">
+        <fileset dir="${compositeDataSetFolder}">
+          <include name="${compositeCombineDataSet1}"/>
+          <include name="${compositeCombineDataSet2}"/>
+        </fileset>
+      </operation>
     </dbunit>
   </target>
 
