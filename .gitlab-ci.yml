@@ -1,0 +1,109 @@
+# https://hub.docker.com/_/maven/
+image: maven:3.8.2-jdk-8
+
+variables:
+  MAVEN_CLI_COMMON: "-e -B"
+
+cache:
+  paths:
+    - .m2/repository/
+    - target/
+
+stages:
+  - compile
+  - unit-test
+  - integration-test
+
+.unit-test-base:
+  stage: unit-test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+
+.integration-test-base:
+  stage: integration-test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - target/failsafe-reports/TEST-*.xml
+
+compile-job:
+  stage: compile
+  script:
+    - mvn $MAVEN_CLI_COMMON clean compile
+
+unit-test-job:
+  extends: .unit-test-base
+  script:
+    - mvn $MAVEN_CLI_COMMON test
+
+derby-integration-test-job:
+  extends: .integration-test-base
+  script:
+    - mvn $MAVEN_CLI_COMMON -Pit-config,derby verify
+
+h2-integration-test-job:
+  extends: .integration-test-base
+  script:
+    - mvn $MAVEN_CLI_COMMON -Pit-config,h2 verify
+
+hsqldb-integration-test-job:
+  extends: .integration-test-base
+  script:
+    - mvn $MAVEN_CLI_COMMON -Pit-config,hsqldb verify
+
+mssql41-integration-test-job:
+  extends: .integration-test-base
+  services:
+    - name: dbunit/dbunit-it-sqlserver:2.0.0
+      alias: sqlserver
+  variables:
+    DB_HOST: sqlserver
+    DB_DATABASE: dbunit
+    DB_USERNAME: dbunit
+    DB_PASSWORD: dbunit
+  script:
+    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=dbunit;password=dbunit;Trusted_Connection=True;SelectMethod=cursor
+# Server=sqlserver\dbunit;
+# Database=dbunit
+# databaseName=dbunit;User Id=dbunit;Password=dbunit;Trusted_Connection=True;SelectMethod=cursor
+
+mysql-integration-test-job:
+  extends: .integration-test-base
+  services:
+    - name: mysql/mysql-server:5.7
+      alias: mysql
+  variables:
+    MYSQL_DATABASE: dbunit
+    MYSQL_USER: dbunit
+    MYSQL_PASSWORD: dbunit
+    MYSQL_ROOT_PASSWORD: dbunit
+    TZ: "America/Chicago"
+  script:
+    - mvn $MAVEN_CLI_COMMON -Pit-config,mysql verify -Ddbunit.profile.url=jdbc:mysql://mysql:3306/dbunit
+
+oracle-ojdbc8-integration-test-job:
+  extends: .integration-test-base
+  services:
+    - name: dbunit/dbunit-it-oracle11g:1.0.1
+      alias: oracle11gJdbc8
+  variables:
+    TZ: "America/Chicago"
+  script:
+    - sleep 1m
+    - mvn $MAVEN_CLI_COMMON -Pit-config,oracle-ojdbc8 verify -Ddbunit.profile.url=jdbc:oracle:thin:@oracle11gJdbc8:1521:XE
+
+postgresql-integration-test-job:
+  extends: .integration-test-base
+  services:
+    - name: postgres:9.6
+      alias: postgres
+  variables:
+    POSTGRES_DB: dbunit
+    POSTGRES_USER: dbunit
+    POSTGRES_PASSWORD: dbunit
+  script:
+    - mvn $MAVEN_CLI_COMMON -Pit-config,postgresql verify -Ddbunit.profile.url=jdbc:postgresql://postgres/dbunit
