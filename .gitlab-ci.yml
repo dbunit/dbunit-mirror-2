@@ -55,18 +55,37 @@ hsqldb-integration-test-job:
   script:
     - mvn $MAVEN_CLI_COMMON -Pit-config,hsqldb verify
 
+mssql-2019-latest-integration-test-job:
+  extends: .integration-test-base
+  services:
+#    - name: microsoft/mssql-server-linux
+    - name: mcr.microsoft.com/mssql/server:2019-latest
+      alias: sqlserver
+  variables:
+    ACCEPT_EULA: Y
+    MSSQL_HOST: sqlserver
+    MSSQL_SA_PASSWORD: theSaPassword1234
+    SA_PASSWORD: theSaPassword1234
+  script:
+    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=sa;password=theSaPassword1234;Trusted_Connection=True;SelectMethod=cursor
+
 mssql41-integration-test-job:
   extends: .integration-test-base
   services:
     - name: dbunit/dbunit-it-sqlserver:2.0.0
       alias: sqlserver
   variables:
+    ACCEPT_EULA: Y
+    MSSQL_HOST: sqlserver
+    SA_PASSWORD: theSaPassword1234
+
     DB_HOST: sqlserver
     DB_DATABASE: dbunit
     DB_USERNAME: dbunit
     DB_PASSWORD: dbunit
   script:
-    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=dbunit;password=dbunit;Trusted_Connection=True;SelectMethod=cursor
+#    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=dbunit;password=dbunit;Trusted_Connection=True;SelectMethod=cursor
+    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=sa;password=theSaPassword1234;Trusted_Connection=True;SelectMethod=cursor
 # Server=sqlserver\dbunit;
 # Database=dbunit
 # databaseName=dbunit;User Id=dbunit;Password=dbunit;Trusted_Connection=True;SelectMethod=cursor
