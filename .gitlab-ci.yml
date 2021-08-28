@@ -66,8 +66,14 @@ mssql-2019-latest-integration-test-job:
     MSSQL_HOST: sqlserver
     MSSQL_SA_PASSWORD: theSaPassword1234
     SA_PASSWORD: theSaPassword1234
+
+    DB_HOST: sqlserver
+    #DB_DATABASE: dbunit
+    DB_USERNAME: sa
+    DB_PASSWORD: theSaPassword1234
   script:
-    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=sa;password=theSaPassword1234;Trusted_Connection=True;SelectMethod=cursor
+#    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=sa;password=theSaPassword1234;Trusted_Connection=True;SelectMethod=cursor
+    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;user=sa;password=theSaPassword1234;Trusted_Connection=True;SelectMethod=cursor
 
 mssql41-integration-test-job:
   extends: .integration-test-base
@@ -77,12 +83,15 @@ mssql41-integration-test-job:
   variables:
     ACCEPT_EULA: Y
     MSSQL_HOST: sqlserver
+    MSSQL_SA_PASSWORD: theSaPassword1234
     SA_PASSWORD: theSaPassword1234
 
     DB_HOST: sqlserver
     DB_DATABASE: dbunit
-    DB_USERNAME: dbunit
-    DB_PASSWORD: dbunit
+    #DB_USERNAME: dbunit
+    #DB_PASSWORD: dbunit
+    DB_USERNAME: sa
+    DB_PASSWORD: theSaPassword1234
   script:
 #    - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=dbunit;password=dbunit;Trusted_Connection=True;SelectMethod=cursor
     - mvn $MAVEN_CLI_COMMON -Pit-config,mssql41 verify -Ddbunit.profile.url=jdbc:sqlserver://sqlserver:1433;database=dbunit;user=sa;password=theSaPassword1234;Trusted_Connection=True;SelectMethod=cursor
